@@ -1,0 +1,29 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E3B85C2E-C5A3-4AC1-A0B3-058D77F21504}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weixin.Service", "src\Weixin_Service\Weixin.Service.csproj", "{A0CD22F5-93AC-41EB-A9BB-AB3879614B04}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Service", "src\Identity_Service\Identity.Service\Identity.Service.csproj", "{DE2F2D7E-89AB-4D6F-8AFB-3AE8C95D6291}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A0CD22F5-93AC-41EB-A9BB-AB3879614B04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0CD22F5-93AC-41EB-A9BB-AB3879614B04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0CD22F5-93AC-41EB-A9BB-AB3879614B04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0CD22F5-93AC-41EB-A9BB-AB3879614B04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE2F2D7E-89AB-4D6F-8AFB-3AE8C95D6291}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE2F2D7E-89AB-4D6F-8AFB-3AE8C95D6291}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE2F2D7E-89AB-4D6F-8AFB-3AE8C95D6291}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE2F2D7E-89AB-4D6F-8AFB-3AE8C95D6291}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A0CD22F5-93AC-41EB-A9BB-AB3879614B04} = {E3B85C2E-C5A3-4AC1-A0B3-058D77F21504}
+		{DE2F2D7E-89AB-4D6F-8AFB-3AE8C95D6291} = {E3B85C2E-C5A3-4AC1-A0B3-058D77F21504}
+	EndGlobalSection
+EndGlobal
