@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Threading.Tasks;
 using JCode.Infrastructure.Downloaders;
+using JCode.Infrastructure.Utils;
 
 namespace Weixin.Service.Infrastructure.Downloaders
 {
@@ -17,13 +19,16 @@ namespace Weixin.Service.Infrastructure.Downloaders
         /// Downloads the media.
         /// </summary>
         /// <param name="mediaId">Media identifier.</param>
-        public void DownloadMedia(string mediaId, string dir, string name)
+        public async Task DownloadMediaAsync(string mediaId, string dir)
         {
             var url = $"https://qyapi.weixin.qq.com/cgi-bin/media/get?access_token={_access_token}&media_id={mediaId}";
-            using (var downloader = new Downloader(url, dir, name))
+            var downloader = new Downloader(url, dir);
+            await downloader.DownloadAsync(res =>
             {
-                downloader.Download();
-            }
+                var mimeType = res.Content.Headers.ContentType.ToString();
+                var extension = MIMEUtil.GetExtension(mimeType);
+                return $"{Guid.NewGuid()}{extension}";
+            });
         }
     }
 }

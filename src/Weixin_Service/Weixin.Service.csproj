@@ -3,6 +3,9 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Infrastructure\Downloaders\Downloader %28副本%29.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="wwwroot\" />
     <Folder Include="Weixin.Core\" />
     <Folder Include="Infrastructure\" />

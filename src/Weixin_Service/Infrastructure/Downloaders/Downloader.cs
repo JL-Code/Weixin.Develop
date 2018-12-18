@@ -9,6 +9,8 @@ namespace JCode.Infrastructure.Downloaders
 
     /**
      * 下载器
+     * 描述：
+     * 下载器一次只能下载单个文件
      * 功能清单： 
      * [ ] 根据响应头 MIME 类型识别文件扩展名
      * [ ] 文件名缺省值
@@ -19,9 +21,9 @@ namespace JCode.Infrastructure.Downloaders
      */
 
     /// <summary>
-    /// 文件下载工具类 带进度提示
+    /// 下载器 带进度提示
     /// </summary>
-    public class Downloader : IDisposable
+    public class Downloader
     {
 
         #region 字段
@@ -29,10 +31,16 @@ namespace JCode.Infrastructure.Downloaders
         private string _requestUri;
         //文件目录
         private string _dirctory;
+
+        private string _dispositionType;
+        // 文件类型
+        private string _extension;
+
         //文件名称
         private string _name;
-        //HTTP模拟客户端
-        private HttpClient _client;
+
+        private string _location;
+
         //下载超时时间 30s
         private TimeSpan _timeout = TimeSpan.FromMilliseconds(30000);
         //当前已下载文件大小
@@ -41,8 +49,7 @@ namespace JCode.Infrastructure.Downloaders
         private long _totalSize;
         //分片
         private long _slice = 102400;
-        //文件流
-        private FileStream _fs;
+
         #endregion
 
         #region 属性
@@ -90,10 +97,18 @@ namespace JCode.Infrastructure.Downloaders
 
         #region 公共方法
 
-        public Downloader()
+        /// <summary>
+        /// 构造一个下载器 指定文件Uri 文件存放文件目录及文件名称
+        /// </summary>
+        /// <param name="requestUri">文件Uri</param>
+        /// <param name="dirctory">文件目录</param>
+        /// <param name="name">文件名称</param>
+        public Downloader(string requestUri, string dirctory, string name)
+            : this(requestUri, dirctory)
         {
-
+            _name = name;
         }
+
 
         /// <summary>
         /// 构造一个下载器 指定文件Uri 文件存放文件目录 文件采用默认名称
@@ -104,44 +119,45 @@ namespace JCode.Infrastructure.Downloaders
         {
             _requestUri = requestUri;
             _dirctory = dirctory;
-
+            Init();
         }
 
-        /// <summary>
-        /// 构造一个下载器 指定文件Uri 文件存放文件目录及文件名称
-        /// </summary>
-        /// <param name="requestUri">文件Uri</param>
-        /// <param name="dirctory">文件目录</param>
-        /// <param name="name">文件名称</param>
-        public Downloader(string requestUri, string dirctory, string name)
-        {
-            _requestUri = requestUri;
-            _dirctory = dirctory;
-            _name = name;
 
-        }
-
-        /// <summary>
-        /// 下载
-        /// </summary>
-        public void Download(Func<HttpResponseMessage, string> fileName)
+        public void Download()
         {
             //请求范围计算  从0开始 为保证整数段 减1 
             long from = _currentSize;
             long to = from + _slice - 1;
             if (_totalSize == 0)
-                GetTotalSize();
+                GetDownloadFileInfo();
             if (to >= _totalSize && _totalSize > 0)
             {
                 to = _totalSize - 1;
             }
-            Download(from, to, fileName);
+            Download();
         }
 
-        public void Download(long from, long to, Func<HttpResponseMessage, string> fileName)
+        /// <summary>
+        /// 下载
+        /// </summary>
+        public async Task DownloadAsync(Func<HttpResponseMessage, string> fileName = null)
+        {
+            //请求范围计算  从0开始 为保证整数段 减1 
+            long from = _currentSize;
+            long to = from + _slice - 1;
+            if (_totalSize == 0)
+                GetDownloadFileInfo();
+            if (to >= _totalSize && _totalSize > 0)
+            {
+                to = _totalSize - 1;
+            }
+            await DownloadAsync(from, to, fileName);
+        }
+
+        public async Task DownloadAsync(long from, long to, Func<HttpResponseMessage, string> fileName)
         {
             if (_totalSize == 0)
-                GetTotalSize();
+                GetDownloadFileInfo();
             if (_currentSize >= _totalSize)
             {
                 IsCompleted = true;
@@ -155,16 +171,14 @@ namespace JCode.Infrastructure.Downloaders
                 response.EnsureSuccessStatusCode();
                 // 判断ContentType
                 // ConetentDisposition 内容特点
-                var name = fileName(response);
-                var fullName = GetFullName(name);
-                using (var bytesRep = response.Content.ReadAsByteArrayAsync())
+                var name = fileName?.Invoke(response);
+                var path = BuildPath(name);
+                var bytesRep = await response.Content.ReadAsByteArrayAsync();
+                var fileByteArr = bytesRep;
+                _currentSize += fileByteArr.Length;
+                using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                 {
-                    var fileByteArr = bytesRep.Result;
-                    _currentSize += fileByteArr.Length;
-                    using (var fs = new FileStream(fullName, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-                    {
-                        fs.WriteAsync(fileByteArr, 0, fileByteArr.Length);
-                    };
+                    await fs.WriteAsync(fileByteArr, 0, fileByteArr.Length);
                 };
                 //不支持断点下载
                 //|= refs: https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/or-assignment-operator
@@ -173,22 +187,9 @@ namespace JCode.Infrastructure.Downloaders
 
         }
 
-        /// <summary>
-        /// 释放非托管文件
-        /// </summary>
-        public void Dispose()
-        {
-            _fs?.Close();
-            _client?.Dispose();
-        }
         #endregion
 
         #region 私有方法
-
-        private string GetFileNameFromUri(string uri)
-        {
-            return "";
-        }
 
         /// <summary>
         /// 初始文件存放路径 HTTPClient实例
@@ -196,31 +197,40 @@ namespace JCode.Infrastructure.Downloaders
         /// </summary>
         private void Init()
         {
-            if (!Directory.Exists(_dirctory))
-                Directory.CreateDirectory(_dirctory);
-            if (string.IsNullOrEmpty(_name))
-                _name = _requestUri.Substring(_requestUri.LastIndexOf('/') + 1);
-            var fullPath = Path.Combine(_dirctory, _name);
-            _fs = new FileStream(fullPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            _client = new HttpClient() { Timeout = _timeout };
+            BuildPath(_name);
         }
 
-        private string GetFullName(string fileName)
+        private string BuildPath(string name = "")
         {
             if (!Directory.Exists(_dirctory))
                 Directory.CreateDirectory(_dirctory);
-            var fullName = Path.Combine(_dirctory, _name);
-            return fullName;
+            if (!string.IsNullOrEmpty(name))
+            {
+                _name = name;
+                _location = Path.Combine(_dirctory, _name);
+            }
+            return _location;
         }
 
         /// <summary>
-        /// 获取文件总大小
+        /// 获取下载文件信息
         /// </summary>
         /// <returns></returns>
-        private void GetTotalSize()
+        private void GetDownloadFileInfo()
         {
-            var response = _client.GetAsync(_requestUri, HttpCompletionOption.ResponseHeadersRead).Result;
-            _totalSize = response.Content.Headers.ContentLength.GetValueOrDefault();
+            using (var httpClient = new HttpClient() { Timeout = _timeout })
+            {
+                var response = httpClient.GetAsync(_requestUri, HttpCompletionOption.ResponseHeadersRead).Result;
+                response.EnsureSuccessStatusCode();
+                var contentDisposition = response.Content.Headers.ContentDisposition;
+                _name = contentDisposition.FileName;
+                _dispositionType = contentDisposition.DispositionType;
+                if (!string.IsNullOrEmpty(_name))
+                {
+                    _extension = Path.GetExtension(_name);
+                }
+                _totalSize = response.Content.Headers.ContentLength.GetValueOrDefault();
+            }
         }
 
         #endregion

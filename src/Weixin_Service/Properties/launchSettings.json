@@ -20,8 +20,8 @@
     "Weixin.Service": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "api/values",
-      "applicationUrl": "http://127.0.0.1:5100;http://192.168.31.54:5100",
+      "launchUrl": "api/wechat",
+      "applicationUrl": "http://127.0.0.1:5000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

@@ -24,13 +24,13 @@ namespace Weixin.Service.Controllers
 
         // GET: api/values
         [HttpGet]
-        public IActionResult Get(string mediaId)
+        public async Task<IActionResult> GetAsync(string mediaId)
         {
             try
             {
                 var accessToken = AccessTokenContainer.GetToken(corpId, appSecret);
                 downloader = new WeChatDownloader(accessToken);
-                downloader.DownloadMedia(mediaId, AppDomain.CurrentDomain.BaseDirectory, "test.png");
+                await downloader.DownloadMediaAsync(mediaId, AppDomain.CurrentDomain.BaseDirectory);
                 return Ok("下载成功");
             }
             catch (Exception ex)
