@@ -134,7 +134,6 @@ namespace JCode.Infrastructure.Downloaders
             {
                 to = _totalSize - 1;
             }
-            Download();
         }
 
         /// <summary>
@@ -172,11 +171,14 @@ namespace JCode.Infrastructure.Downloaders
                 // 判断ContentType
                 // ConetentDisposition 内容特点
                 var name = fileName?.Invoke(response);
-                var path = BuildPath(name);
+                if (!string.IsNullOrEmpty(name))
+                {
+                    _location = BuildPath(name);
+                }
                 var bytesRep = await response.Content.ReadAsByteArrayAsync();
                 var fileByteArr = bytesRep;
                 _currentSize += fileByteArr.Length;
-                using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                using (var fs = new FileStream(_location, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                 {
                     await fs.WriteAsync(fileByteArr, 0, fileByteArr.Length);
                 };
@@ -197,18 +199,15 @@ namespace JCode.Infrastructure.Downloaders
         /// </summary>
         private void Init()
         {
-            BuildPath(_name);
+
         }
 
-        private string BuildPath(string name = "")
+        private string BuildPath(string name)
         {
             if (!Directory.Exists(_dirctory))
                 Directory.CreateDirectory(_dirctory);
-            if (!string.IsNullOrEmpty(name))
-            {
-                _name = name;
-                _location = Path.Combine(_dirctory, _name);
-            }
+            _name = name;
+            _location = Path.Combine(_dirctory, _name);
             return _location;
         }
 
@@ -223,13 +222,14 @@ namespace JCode.Infrastructure.Downloaders
                 var response = httpClient.GetAsync(_requestUri, HttpCompletionOption.ResponseHeadersRead).Result;
                 response.EnsureSuccessStatusCode();
                 var contentDisposition = response.Content.Headers.ContentDisposition;
-                _name = contentDisposition.FileName;
+                _name = contentDisposition.FileName.Replace("\"", "");
                 _dispositionType = contentDisposition.DispositionType;
                 if (!string.IsNullOrEmpty(_name))
                 {
                     _extension = Path.GetExtension(_name);
                 }
                 _totalSize = response.Content.Headers.ContentLength.GetValueOrDefault();
+                BuildPath(_name);
             }
         }
 

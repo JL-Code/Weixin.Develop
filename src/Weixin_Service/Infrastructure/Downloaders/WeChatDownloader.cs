@@ -23,12 +23,13 @@ namespace Weixin.Service.Infrastructure.Downloaders
         {
             var url = $"https://qyapi.weixin.qq.com/cgi-bin/media/get?access_token={_access_token}&media_id={mediaId}";
             var downloader = new Downloader(url, dir);
-            await downloader.DownloadAsync(res =>
-            {
-                var mimeType = res.Content.Headers.ContentType.ToString();
-                var extension = MIMEUtil.GetExtension(mimeType);
-                return $"{Guid.NewGuid()}{extension}";
-            });
+            //await downloader.DownloadAsync(res =>
+            //{
+            //    var mimeType = res.Content.Headers.ContentType.ToString();
+            //    var extension = MIMEUtil.GetExtension(mimeType);
+            //    return $"{Guid.NewGuid()}{extension}";
+            //});
+            await downloader.DownloadAsync();
         }
     }
 }

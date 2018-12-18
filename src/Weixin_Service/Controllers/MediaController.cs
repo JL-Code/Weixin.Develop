@@ -15,7 +15,7 @@ namespace Weixin.Service.Controllers
     {
         string corpId = "ww42de4906ae6bf541";
         string appSecret = "R1koF_ZzCguRlXKcOBXBBAYWyDoc3Rm5D-qPN660uf8";
-        private WeChatDownloader downloader;
+
 
         public MediaController()
         {
@@ -29,7 +29,7 @@ namespace Weixin.Service.Controllers
             try
             {
                 var accessToken = AccessTokenContainer.GetToken(corpId, appSecret);
-                downloader = new WeChatDownloader(accessToken);
+                var downloader = new WeChatDownloader(accessToken);
                 await downloader.DownloadMediaAsync(mediaId, AppDomain.CurrentDomain.BaseDirectory);
                 return Ok("下载成功");
             }
