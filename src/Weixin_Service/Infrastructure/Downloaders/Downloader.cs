@@ -53,6 +53,7 @@ namespace JCode.Infrastructure.Downloaders
         #endregion
 
         #region 属性
+
         /// <summary>
         /// 分片大小
         /// </summary>
@@ -92,6 +93,18 @@ namespace JCode.Infrastructure.Downloaders
         /// 文件名称
         /// </summary>
         public string FileName { get => _name; }
+
+        /// <summary>
+        /// 扩展名
+        /// </summary>
+        /// <value>The extension.</value>
+        public string Extension { get => _extension; }
+
+        /// <summary>
+        /// 文件大小
+        /// </summary>
+        /// <value>The total size.</value>
+        public long TotalSize { get => _totalSize; }
 
         #endregion
 
